@@ -3,7 +3,7 @@
 #include <node_buffer.h>
 #include <uv.h>
 
-#include <string>
+#include <string.h>
 #include <iostream>
 
 #include "open_vcdiff/src/google/vcencoder.h"
@@ -24,7 +24,7 @@ struct PersistentBuffer
 	
 	void	Reset()
 	{
-		data = nullptr;
+		data = NULL;
 		len = 0;
 		buffer.Reset();
 	}
@@ -81,7 +81,7 @@ void	DoDecode(uv_work_t* request)
 	open_vcdiff::VCDiffDecoder	decoder;
 	std::string					delta(info->bufferIn.data, info->bufferIn.len);
 	
-	bool r = decoder.Decode<std::string>(info->bufferSrc.data, info->bufferSrc.len, delta, &info->out);
+	decoder.Decode<std::string>(info->bufferSrc.data, info->bufferSrc.len, delta, &info->out);
 }
 
 
@@ -91,7 +91,7 @@ void	DoEncode(uv_work_t* request)
 	open_vcdiff::VCDiffEncoder	encoder(info->bufferSrc.data, info->bufferSrc.len);
 	
 	//encoder.SetFormatFlags(open_vcdiff::VCD_FORMAT_INTERLEAVED); // no need
-	bool r = encoder.Encode<std::string>(info->bufferIn.data, info->bufferIn.len, &info->out);
+	encoder.Encode<std::string>(info->bufferIn.data, info->bufferIn.len, &info->out);
 }
 
 void	CleanInfo(uv_work_t* request, int status)
