@@ -1,0 +1,19 @@
+{
+  "name": "simple-vcdiff",
+  "description": "A really simple wrapper around open-vcdiff",
+  "author": "Jeremy Lafontaine <j.lafontaine@laposte.net>",
+  
+  "version": "0.1.3",
+  
+  "keywords": [
+    "open-vcdiff",
+    "vcdiff",
+    "compression"
+  ],
+  
+  "main" : "build/Release/simple_vcdiff.node",
+  
+  "engines" : { "node" : ">=0.12" },
+  
+  "license" : "Apache-2.0"
+}
