@@ -15,7 +15,7 @@ struct PersistentBuffer
 	char*							data;
 	size_t							len;
 	
-	void	Reset(v8::Isolate* isolate, v8::Local<v8::Value>& val)
+	void	Reset(v8::Isolate* isolate, v8::Local<v8::Value> val)
 	{
 		buffer.Reset(isolate, val);
 		data = node::Buffer::Data(val);
