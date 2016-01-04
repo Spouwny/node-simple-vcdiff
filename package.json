@@ -3,7 +3,7 @@
   "description": "A really simple wrapper around open-vcdiff",
   "author": "Jeremy Lafontaine <j.lafontaine@laposte.net>",
   
-  "version": "0.1.9",
+  "version": "0.1.10",
   "repository" : {
     "type" : "git",
     "url" : "https://github.com/Spouwny/node-simple-vcdiff.git"

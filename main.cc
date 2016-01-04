@@ -38,12 +38,16 @@ struct InfoEncode
 	PersistentBuffer 				bufferSrc;
 	PersistentBuffer 				bufferIn;
 	std::string						out;
+	bool							success;
 	
+	InfoEncode() { Reset(); }
+
 	void	Reset()
 	{
 		callback.Reset();
 		bufferSrc.Reset();
 		bufferIn.Reset();
+		success = false;
 	}
 };
 
@@ -81,7 +85,7 @@ void	DoDecode(uv_work_t* request)
 	open_vcdiff::VCDiffDecoder	decoder;
 	std::string					delta(info->bufferIn.data, info->bufferIn.len);
 	
-	decoder.Decode<std::string>(info->bufferSrc.data, info->bufferSrc.len, delta, &info->out);
+	info->success = decoder.Decode<std::string>(info->bufferSrc.data, info->bufferSrc.len, delta, &info->out);
 }
 
 
@@ -91,7 +95,7 @@ void	DoEncode(uv_work_t* request)
 	open_vcdiff::VCDiffEncoder	encoder(info->bufferSrc.data, info->bufferSrc.len);
 	
 	//encoder.SetFormatFlags(open_vcdiff::VCD_FORMAT_INTERLEAVED); // no need
-	encoder.Encode<std::string>(info->bufferIn.data, info->bufferIn.len, &info->out);
+	info->success = encoder.Encode<std::string>(info->bufferIn.data, info->bufferIn.len, &info->out);
 }
 
 void	CleanInfo(uv_work_t* request, int status)
@@ -100,9 +104,16 @@ void	CleanInfo(uv_work_t* request, int status)
 	v8::HandleScope	scope(info->isolate);
 
 	
-	v8::Local<v8::Object> buffer = node::Buffer::New(info->out.size());
-	memcpy(node::Buffer::Data(buffer), info->out.c_str(), info->out.size());
+	v8::Local<v8::Object> buffer;
 	
+	if (info->success)
+	{
+		buffer = node::Buffer::New(info->out.size());
+		memcpy(node::Buffer::Data(buffer), info->out.c_str(), info->out.size());
+	}
+	else
+		buffer = node::Buffer::New(0);
+
 	const unsigned argc = 1;
 	v8::Local<v8::Value> argv[argc] = { buffer };
 	
