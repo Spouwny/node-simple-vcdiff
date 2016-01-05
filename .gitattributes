@@ -2,6 +2,7 @@
 * text=auto
 
 *.gyp text eol=lf
+*.gypi text eol=lf
 *.json text eol=lf
 
 # Custom for Visual Studio
