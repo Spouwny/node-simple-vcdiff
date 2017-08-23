@@ -154,24 +154,6 @@ void	Encode(const v8::FunctionCallbackInfo<v8::Value>& args)
 	uv_queue_work(uv_default_loop(), &info->request, DoEncode, CleanInfo);
 	
 }
-void	sum(const v8::FunctionCallbackInfo<v8::Value>& args)
-{
-    v8::Isolate*	isolate = args.GetIsolate();
-    v8::HandleScope	scope(isolate);
-    
-    int len = args.Length();
-    double result = 0;
-    int i = 0;
-    for( ;i<len;i++){
-        v8::Local<v8::Number>  v = args[i]->ToNumber();
-        result += v->Value();
-    }
-    
-    args.GetReturnValue().Set(v8::Number::New(isolate, result));
-    //return len;
-    
-}
-
 
 void	Decode(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
@@ -196,7 +178,6 @@ void	init(v8::Handle<v8::Object> exports)
 {
     NODE_SET_METHOD(exports, "Encode", Encode);
     NODE_SET_METHOD(exports, "Decode", Decode);
-    NODE_SET_METHOD(exports, "sum", sum);
 }
 
 NODE_MODULE(simple_vcdiff, init)
