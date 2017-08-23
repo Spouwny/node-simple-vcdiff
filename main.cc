@@ -93,31 +93,42 @@ void	DoEncode(uv_work_t* request)
 {
 	InfoEncode* 				info = (InfoEncode*)request->data;
 	open_vcdiff::VCDiffEncoder	encoder(info->bufferSrc.data, info->bufferSrc.len);
-	
+ 
 	//encoder.SetFormatFlags(open_vcdiff::VCD_FORMAT_INTERLEAVED); // no need
 	info->success = encoder.Encode<std::string>(info->bufferIn.data, info->bufferIn.len, &info->out);
 }
 
 void	CleanInfo(uv_work_t* request, int status)
 {
+    
 	InfoEncode* 	info = (InfoEncode*)request->data;
 	v8::HandleScope	scope(info->isolate);
 
 	
-	v8::Local<v8::Object> buffer;
-	
+	v8::MaybeLocal<v8::Object> buffer;
+	v8::Local<v8::Value> data ;
+    
 	if (info->success)
 	{
-		buffer = node::Buffer::New(info->out.size());
-		memcpy(node::Buffer::Data(buffer), info->out.c_str(), info->out.size());
+        
+		buffer = node::Buffer::New(info->isolate,info->out.size());
+        
+
+		if(buffer.ToLocal(&data)){
+			memcpy(node::Buffer::Data(data), info->out.c_str(), info->out.size());
+
+		}
 	}
 	else
-		buffer = node::Buffer::New(0);
-
-	const unsigned argc = 1;
-	v8::Local<v8::Value> argv[argc] = { buffer };
-	
-	ToLocal<v8::Function>(&info->callback)->Call(info->isolate->GetCurrentContext()->Global(), argc, argv);
+    {
+		buffer = node::Buffer::New(info->isolate,0);
+		buffer.ToLocal(&data);
+	}
+    v8::Local<v8::Context> context =info->isolate->GetCurrentContext();
+	ToLocal<v8::Function>(&info->callback)
+		->Call(
+			context,context->Global(),
+			1,&data);
 	
 	info->Reset();
 	delete info;
@@ -128,19 +139,37 @@ void	Encode(const v8::FunctionCallbackInfo<v8::Value>& args)
 	v8::Isolate*	isolate = args.GetIsolate();
 	v8::HandleScope	scope(isolate);
   
-	if (!CheckArgs(isolate, args))
-		return ;
-	
+    if (!CheckArgs(isolate, args)){
+        return ;
+    }
 	InfoEncode*	info = new InfoEncode();
   
 	info->isolate = isolate;
-	info->request.data = info;
-	info->bufferSrc.Reset(isolate, args[0]);
+    info->request.data = info;
+    info->bufferSrc.Reset(isolate, args[0]);
 	info->bufferIn.Reset(isolate, args[1]);
+    
 	info->callback.Reset(isolate, v8::Local<v8::Function>::Cast(args[2]));
-	
+    
 	uv_queue_work(uv_default_loop(), &info->request, DoEncode, CleanInfo);
 	
+}
+void	sum(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    v8::Isolate*	isolate = args.GetIsolate();
+    v8::HandleScope	scope(isolate);
+    
+    int len = args.Length();
+    double result = 0;
+    int i = 0;
+    for( ;i<len;i++){
+        v8::Local<v8::Number>  v = args[i]->ToNumber();
+        result += v->Value();
+    }
+    
+    args.GetReturnValue().Set(v8::Number::New(isolate, result));
+    //return len;
+    
 }
 
 
@@ -165,8 +194,9 @@ void	Decode(const v8::FunctionCallbackInfo<v8::Value>& args)
 }
 void	init(v8::Handle<v8::Object> exports)
 {
-	NODE_SET_METHOD(exports, "Encode", Encode);
-	NODE_SET_METHOD(exports, "Decode", Decode);
+    NODE_SET_METHOD(exports, "Encode", Encode);
+    NODE_SET_METHOD(exports, "Decode", Decode);
+    NODE_SET_METHOD(exports, "sum", sum);
 }
 
 NODE_MODULE(simple_vcdiff, init)
